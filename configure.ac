@@ -1,37 +1,71 @@
-# Process this file with autoconf to produce a configure script.
-AC_INIT()
-AC_CONFIG_HEADERS(conf.h)
-AC_CONFIG_FILES(Makefile)
+AC_INIT([gnarwl], [3.7])
+AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_SRCDIR([src])
+AC_CONFIG_AUX_DIR([config.aux])
+AM_INIT_AUTOMAKE
+AC_CANONICAL_HOST
 
-# Checks for programs.
 AC_PROG_CC
+AC_CHECK_TOOL([STRIP],[strip])
+AC_PROG_INSTALL
+AC_PROG_MAKE_SET
+AC_PROG_MKDIR_P
 
-AC_ARG_WITH(homedir,AC_HELP_STRING([--with-homedir=DIR],[Homedir for the gnarwl user]),[homedir="$withval"],[homedir="\${prefix}/var/lib/gnarwl"])
-AC_ARG_WITH(docdir,AC_HELP_STRING([--with-docdir=DIR],[Where to install the docs]),docdir="$withval",docdir="\${prefix}/share/doc/packages/gnarwl")
-AC_ARG_WITH(useradd_prog,AC_HELP_STRING([--with-useradd_prog=DIR],[Programm for adding users]),useradd_prog="$withval",useradd_prog="/usr/sbin/useradd")
-AC_ARG_WITH(useradd_args,AC_HELP_STRING([--with-useradd_args=ARG],[Arguments for the useradd programm]),useradd_args="$withval",useradd_args="-r -s /bin/false -c \"Email autoreply agent\" -d \$(HOMEDIR) \$(BIN)")
-AC_ARG_WITH(mta,AC_HELP_STRING([--with-mta=prog],[MTA to use]),mta="\"$withval\"",mta="\"/usr/sbin/sendmail\"")
+AC_LANG_PUSH([C])
+AC_LANG_WERROR
 
-AC_SUBST(homedir)
-AC_SUBST(docdir)
-AC_SUBST(useradd_prog)
-AC_SUBST(useradd_args)
-
-AC_ARG_WITH(permmask,AC_HELP_STRING([--with-permmask=MASK],[File creation mask for database files]),permmask="$withval",permmask="0600")
-AC_ARG_WITH(maxline,AC_HELP_STRING([--with-maxline=NUMBER],[Maximum input buffer line length]),maxline="$withval",maxline="2100")
-AC_SUBST(permmask)
-AC_SUBST(maxline)
-
-
+AC_CHECK_FUNCS([iconv])
 AC_CHECK_LIB([gdbm], [gdbm_open])
-
 AC_CHECK_LIB([ldap],[ldap_init])
 AC_CHECK_FUNCS([ldap_set_option])
 
-AC_CHECK_FUNCS([iconv])
 
-AC_DEFINE_UNQUOTED(UMASK,$permmask)
-AC_DEFINE_UNQUOTED(MAXLINE,$maxline)
-AC_DEFINE_UNQUOTED(DEFAULT_MTA,$mta)
 
+AC_ARG_WITH(homedir,
+    AC_HELP_STRING([--with-homedir=DIR], [Homedir for the gnarwl user]),
+    [gnarwlhome="\"$withval\""],
+    [gnarwlhome="\${prefix}/var/lib/gnarwl"])
+dnl AC_ARG_WITH(useradd_prog,
+dnl     AC_HELP_STRING([--with-useradd_prog=DIR], [Programm for adding users]),
+dnl     [useradd_prog="$withval"],
+dnl     [useradd_prog="/usr/sbin/useradd"])
+dnl AC_ARG_WITH(useradd_args,
+dnl    AC_HELP_STRING([--with-useradd_args=ARG],
+dnl                   [Arguments for the useradd programm]),
+dnl    [useradd_args="$withval"],
+dnl    [useradd_args="-r -s /bin/false -c \"Email autoreply agent\" -d \$(gnarwlhome) gnarwl"])
+AC_ARG_WITH(mta,
+    AC_HELP_STRING([--with-mta=prog],[MTA to use]),
+    [mta="$withval"],
+    [mta="/usr/sbin/sendmail"])
+AC_ARG_WITH(permmask,
+    AC_HELP_STRING([--with-permmask=MASK],
+                   [File creation mask for database files]),
+    [permmask="$withval"],
+    [permmask="0600"])
+AC_ARG_WITH(maxline,
+    AC_HELP_STRING([--with-maxline=NUMBER],
+                   [Maximum input buffer line length]),
+    [maxline="$withval"],
+    [maxline="2100"])
+
+# conf.h
+AC_DEFINE_UNQUOTED([UMASK], [${permmask}])
+AC_DEFINE_UNQUOTED([MAXLINE], [${maxline}])
+dnl AC_DEFINE_UNQUOTED([DEFAULT_MTA], ["${mta}"])
+AH_TEMPLATE([UMASK], [File permission mask])
+AH_TEMPLATE([MAXLINE], [Maximum size for input buffer])
+dnl AH_TEMPLATE([DEFAULT_MTA], [What to use as default MTA])
+
+GNAWRL_HOMEDIR="${gnarwlhome}"
+GNAWRL_CFGFILE="${sysconfdir}/gnarwl.cfg"
+GNAWRL_MTA="${mta}"
+AC_SUBST([GNAWRL_HOMEDIR])
+AC_SUBST([GNAWRL_CFGFILE])
+AC_SUBST([GNAWRL_MTA])
+dnl AC_SUBST(useradd_prog)
+dnl AC_SUBST(useradd_args)
+
+AC_CONFIG_HEADERS([conf.h])
+AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

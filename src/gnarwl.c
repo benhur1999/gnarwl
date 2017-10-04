@@ -8,19 +8,20 @@
 #endif
 
 #include <conf.h>
+#include "gnarwl.h"
 #include "util.h"
 #include "config.h"
 #include "dbaccess.h"
 #include "mailhandler.h"
 
-/* 
+/*
  * We can't feed addresses from the "-a" switch directly to addAddr(),
  * as cfg.blacklist may not be set up, yet. So we cache them here.
  */
 char** tmprecv=NULL;
 
 void printUsage(void) {
-  
+
   printf("\nGNARWL(v%s) - Gnu Neat Auto Reply With LDAP\n\n\
   Read email through stdin, reply to it, if necessary\n\
   Options:\n\n\
@@ -28,21 +29,21 @@ void printUsage(void) {
   \t-a <address>\tforce receiver address\n\
   \t-s <address>\tforce sender address\n\
   \t-c <cfgfile>\tuse configfile (default: %s)\n\
-  \n",VERSION,CFGFILE);
-  
+  \n",VERSION,GNAWRL_CFGFILE);
+
   exit(EXIT_SUCCESS);
 }
 
 void tmpAddrStore(const char* adr) {
   int i=0;
-  
+
   if(adr==NULL || adr[0]=='\0') return;
-  
+
   while(tmprecv[i]!=NULL) {
     if(!strcasecmp(tmprecv[i],adr)) return;
     i++;
   }
-  
+
   tmprecv=(char**)realloc(tmprecv,(i+2)*sizeof(char**));
   if(tmprecv==NULL) oom();
   tmprecv[i]=NULL;
@@ -59,11 +60,11 @@ int main(int argc, char **argv) {
   char* sndr=NULL;
   extern char** receivers;
   extern int verbose;
-  
-  cfg_file=CFGFILE;
+
+  cfg_file=GNAWRL_CFGFILE;
   tmprecv=(char**)calloc(1,sizeof(char**));
   if (tmprecv==NULL) oom();
-  
+
   while ((ch = getopt(argc, argv, "hc:a:s:")) != EOF) {
     switch((char)ch) {
       case 'h': printUsage(); break;
@@ -72,12 +73,12 @@ int main(int argc, char **argv) {
       case 's': cpyStr(&sndr,optarg);cleanAddress(&sndr);break;
     }
   }
-  
+
   openlog("gnarwl",LOG_PID,LOG_MAIL);
   readConf(cfg_file);
-  
+
   if (receiveMail(tmprecv,sndr)==FALSE) return EXIT_SUCCESS;
-  
+
   ch=0;
   dbConnect();
 

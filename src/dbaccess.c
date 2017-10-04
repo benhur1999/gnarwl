@@ -13,6 +13,7 @@
 
 #include <conf.h>
 #include "config.h"
+#include "gnarwl.h"
 #include "util.h"
 #include "dbaccess.h"
 #include "mailhandler.h"
@@ -49,7 +50,7 @@ void dbCacheHF(void) {
   if (cfg.mailheader!=NULL) {
     header=readFile(cfg.mailheader);
   }
-  
+
   if (cfg.mailfooter!=NULL) {
     footer=readFile(cfg.mailfooter);
   }
@@ -64,23 +65,23 @@ int dbCheck( char* she, char* me) {
   datum data;
   datum key;
   time_t t;
-  
+
   // Skip the whole hassle, if the admin feels lucky
   if (cfg.dbexp==0) return TRUE;
-  
+
   fname=(char*)calloc(strlen(me)+strlen(cfg.dbdir)+5,sizeof(char));
   if (fname==NULL) oom();
   strcpy(fname,cfg.dbdir);
   if (fname[strlen(fname)-1]!='/') fname[strlen(fname)]='/';
   strcat(fname,me);
-  
+
   dbf=dbOpen(fname,GDBM_READER);
   if (dbf==NULL) dbf=dbOpen(fname,GDBM_WRCREAT);
   if (dbf==NULL) {
     syslog(LOG_MAIL|LOG_WARNING,"CRIT/IO %s",fname);
     exit(EXIT_FAILURE);
   }
-  
+
   key.dptr=she;
   key.dsize=(int)strlen(she)+1;
   data=gdbm_fetch(dbf,key);
@@ -103,10 +104,10 @@ void dbLock( char* he, char* me) {
   datum key;
   datum data;
   time_t ret;
-  
+
   // Skip the whole hassle, if the admin feels lucky
   if (cfg.dbexp==0) return;
-  
+
   fname=(char*)calloc(strlen(me)+strlen(cfg.dbdir)+5,sizeof(char));
   if (fname==NULL) oom();
   strcpy(fname,cfg.dbdir);
@@ -114,12 +115,12 @@ void dbLock( char* he, char* me) {
   strcat(fname,me);
 
   dbf=dbOpen(fname,GDBM_WRITER);
-  
+
   if (dbf==NULL) {
     syslog(LOG_MAIL|LOG_WARNING,"CRIT/IO error locking '%s' for writing",fname);
     exit(EXIT_FAILURE);
   }
-  
+
   key.dptr=he;
   key.dsize=strlen(he)+1;
   ret=time(NULL);
@@ -141,11 +142,11 @@ GDBM_FILE dbOpen( char* fname, int mode) {
   GDBM_FILE dbf;
   int retrycount=0;
   struct stat fs;
-  
+
   if (fname==NULL) return NULL;
-  
+
   if ( (mode==GDBM_READER) && (stat(fname,&fs)==-1) ) return NULL;
-  
+
   do {
     dbf=gdbm_open(fname,0,mode,cfg.umask,NULL);
     if (dbf!=NULL) break;
@@ -154,7 +155,7 @@ GDBM_FILE dbOpen( char* fname, int mode) {
     sleep(1+(int) (10.0*rand()/(RAND_MAX+1.0)));
   }
   while ((errno == EAGAIN) && (retrycount<=10));
-  
+
   return dbf;
 }
 
@@ -166,7 +167,7 @@ void dbClose(GDBM_FILE dbf_ptr) {
 
 int dbContains(const char* str_ptr, GDBM_FILE dbf_ptr) {
   datum key;
-  
+
   if ((str_ptr==NULL) || (dbf_ptr==NULL)) return FALSE;
   key.dptr=(char*)str_ptr;
   key.dsize=(int)strlen(key.dptr)+1;
@@ -221,22 +222,22 @@ void dbDisconnect() {
 }
 
 char** dbQuery(const char* mail) {
-  
+
   LDAPMessage *res;
   struct timeval maxwait;
   char *tmp=NULL;
   char **entry;
   char **retbuf;
   int i;
-  
+
   maxwait.tv_sec=LDAPQUERY_MAXWAIT;
   maxwait.tv_usec=0;
-  
-  
+
+
   cpyStr(&tmp,cfg.qfilter);
   expandVars(&tmp,cfg.map_receiver,(char*)mail);
-  expandVars(&tmp,cfg.map_sender,sender);  
-  
+  expandVars(&tmp,cfg.map_sender,sender);
+
   i=ldap_search_st(ldcon,cfg.base,cfg.scope,tmp,cfg.macro_attr,0,&maxwait,&res);
   if (i!=LDAP_SUCCESS) {
     if (verbose>=LVL_WARN) {
@@ -246,31 +247,31 @@ char** dbQuery(const char* mail) {
     if (retbuf==NULL) oom();
     return retbuf;
   }
-  
+
   i=ldap_count_entries(ldcon,res);
   retbuf=(char**)calloc(i+1,sizeof(char**));
   if (retbuf==NULL) oom();
-  
+
   if (i==0){
     if (verbose>=LVL_DEBUG)
       syslog(LOG_MAIL|LOG_DEBUG,"DEBUG/LDAP No match: %s",tmp);
     return retbuf;
   }
-  
+
   free(tmp);
   tmp=NULL;
-  
-  
+
+
   dbCacheHF();
-  
+
   res=ldap_first_entry(ldcon,res);
   if (res==NULL) return retbuf;
   i=0;
-  
+
   while(res!=NULL) {
     int count=0;
     char **attr;
-    
+
     entry=ldap_get_values(ldcon,res,cfg.result);
     if (entry!=NULL && entry[0]!=NULL) {
       retbuf[i]=(char*)malloc((strlen(header)+strlen(footer)+strlen(entry[0])+5)*sizeof(char));
@@ -282,7 +283,7 @@ char** dbQuery(const char* mail) {
       expandVars(&retbuf[i],cfg.map_subject,subject);
       expandVars(&retbuf[i],cfg.map_sender,sender);
       expandVars(&retbuf[i],cfg.map_receiver,(char*)mail);
-      
+
       while(cfg.macro_name[count]!=NULL) {
         attr=ldap_get_values(ldcon,res,cfg.macro_attr[count]);
         if (attr!=NULL && attr[0]!=NULL) {
@@ -292,12 +293,12 @@ char** dbQuery(const char* mail) {
         else expandVars(&retbuf[i],cfg.macro_name[count],"");
         count++;
       }
-      
+
       ldap_value_free(entry);
       i++;
     }
     res=ldap_next_entry(ldcon,res);
   }
-  
+
   return retbuf;
 }

@@ -9,18 +9,19 @@
 #endif
 
 #include <conf.h>
+#include "gnarwl.h"
 #include "config.h"
 #include "util.h"
 
 #ifndef LDAP_VERSION2
 #define PROTVER2 LDAP_PROTOCOL_DETECT
-#else 
+#else
 #define PROTVER2 LDAP_VERSION2
 #endif
 
 #ifndef LDAP_VERSION3
 #define PROTVER3 LDAP_PROTOCOL_DETECT
-#else 
+#else
 #define PROTVER3 LDAP_VERSION3
 #endif
 
@@ -29,9 +30,9 @@ struct conf cfg;
 int verbose=LVL_CRIT;
 
 void putEntry(char* key, char* val) {
-  
+
   if (key==NULL || val==NULL) return;
-  
+
   if (!strcasecmp(key,"login")) {
     cfg.uid=val;
     return;
@@ -52,22 +53,22 @@ void putEntry(char* key, char* val) {
     cfg.mailheader=val;
     return;
   }
-  
+
   if (!strcasecmp(key,"forcefooter")) {
     cfg.mailfooter=val;
     return;
   }
-  
-  
+
+
   // val may not be NULL below
-  
+
   if (!strcasecmp(key,"map_field")) {
     int i=0;
     char **entry=splitString(val,1,' ');
-    
+
     free(val);
     if (entry[1]==NULL) return;
-    
+
     while(cfg.macro_attr[i]!=NULL) i++;
     cfg.macro_attr=(char**)realloc(cfg.macro_attr,(i+2)*sizeof(char**));
     cfg.macro_name=(char**)realloc(cfg.macro_name,(i+2)*sizeof(char**));
@@ -76,10 +77,10 @@ void putEntry(char* key, char* val) {
     cfg.macro_name[i+1]=NULL;
     cfg.macro_attr[i]=entry[1];
     cfg.macro_name[i]=entry[0];
-    
+
     return;
   }
-  
+
   if (!strcasecmp(key,"server_uri")) {
     cfg.uri=val;
     return;
@@ -104,7 +105,7 @@ void putEntry(char* key, char* val) {
     if (!strcasecmp(val,"base")) cfg.scope=LDAP_SCOPE_BASE;
     if (!strcasecmp(val,"one")) cfg.scope=LDAP_SCOPE_ONELEVEL;
     if (!strcasecmp(val,"sub")) cfg.scope=LDAP_SCOPE_SUBTREE;
-    return;                                                                     
+    return;
   }
   if (!strcasecmp(key,"base")) {
     cfg.base=val;
@@ -149,7 +150,7 @@ void putEntry(char* key, char* val) {
   if (!strcasecmp(key,"recvheader")) {
     int i=0;
     char** tmp=splitString(val,-1,' ');
-    
+
     free(val);
     while(cfg.recv_header[i]!=NULL) {
       free(cfg.recv_header[i]);
@@ -191,7 +192,7 @@ void putEntry(char* key, char* val) {
     }
     return;
   }
-  
+
   if (!strcasecmp(key,"deref")) {
     if (!strcasecmp(val,"never")) cfg.deref=LDAP_DEREF_NEVER;
     if (!strcasecmp(val,"search")) cfg.deref=LDAP_DEREF_SEARCHING;
@@ -216,9 +217,9 @@ void setDefaults(void) {
   cfg.mfilter=NULL;
   cfg.scope=LDAP_SCOPE_SUBTREE;
   cfg.port=LDAP_PORT;
-  cfg.dbdir=BLOCKDIR;
+  cfg.dbdir=GNAWRL_HOMEDIR "/block";
   cfg.dbexp=DEFAULT_EXPIRE;
-  cfg.mta=DEFAULT_MTA;
+  cfg.mta=GNAWRL_MTA;
   cfg.mta_opts="";
   cfg.blist=NULL;
   cfg.charset=NULL;
@@ -250,7 +251,7 @@ void readConf(char *cfile) {
     exit(EXIT_FAILURE);
   }
   while(((fgets(buf, (size_t)sizeof(buf), fptr)) && (buf != NULL))) {
-    if (!((buf[0]=='#') || (*buf=='\n'))) { 
+    if (!((buf[0]=='#') || (*buf=='\n'))) {
       if (buf[strlen(buf)-1]=='\n') buf[strlen(buf)-1]='\0';
       tmp=splitString(buf,1,' ');
       //printf("%s:%s\n",tmp[0],tmp[1]);
@@ -259,7 +260,7 @@ void readConf(char *cfile) {
     }
   }
   (void)fclose(fptr);
-  
+
   while(cfg.macro_attr[pos]!=NULL) pos++;
   tmp=(char**)calloc(sizeof(char**)*2+pos*sizeof(char**),sizeof(char**));
   if (tmp==NULL) oom();

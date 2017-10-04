@@ -1,26 +1,26 @@
-.TH DAMNIT _MANSEC_
+.TH DAMNIT 8
 .SH NAME
 damnit \- DAtabase MaNagement InTerface
 
 .SH SYNOPSIS
-.B damnit 
-[\-h] 
+.B damnit
+[\-h]
 [\-d\ <file>\ <value>]
-[\-a\ <file>\ <value>] 
+[\-a\ <file>\ <value>]
 [\-f\ <string>]
 [\-l\ <file>]
 
 .SH DESCRIPTION
 .B damnit
-is the database management tool for 
-.B gnarwl(_MANSEC_)
+is the database management tool for
+.B gnarwl(8)
 \&. It allows
-systemadministrators to list and/or manipulate 
+systemadministrators to list and/or manipulate
 .B gnarwl's
-database files. It is 
+database files. It is
 not intented to be employed by the average user, who should use LDAP as
 the only interface to
-.B gnarwl(_MANSEC_)
+.B gnarwl(8)
 .
 
 .SH OPTIONS
@@ -33,7 +33,7 @@ Select output format for database listing (only meaningful with -l).
 macros are recognized: %entry, %time, %tstamp, \\en and \\et. Translating to
 the entry itself, the entrytime (in human readable form), the entrytime (as
 timestamp), a newline character, and a tab character.
-The default format is: "%time -> %entry\\en". Don't forget the trailing 
+The default format is: "%time -> %entry\\en". Don't forget the trailing
 newline.
 
 .IP "-d <file> [<value>]"
@@ -51,10 +51,10 @@ List database file specified by <file>.
 .SH DATABASE FILES
 .B gnarwl
 uses hashfiles for storing information on disk. Meaning, all
-datasets consist of key and value pairs. The key is always 
+datasets consist of key and value pairs. The key is always
 a NULL terminated character string, while the value contains the timestamp,
 when the key was entered (last time) into the file. This timestamp is of type
-time_t (as returned by time(2)) and therefore, 
+time_t (as returned by time(2)) and therefore,
 .B gnarwl's
 database files are not copyable between different system architectures.
 
@@ -62,34 +62,34 @@ database files are not copyable between different system architectures.
 Patrick Ahlbrecht <p.ahlbrecht@billiton.de>
 
 .SH SEE ALSO
-.BR gnarwl(_MANSEC_)
+.BR gnarwl(8)
 
 .SH FILES
-.I _HOMEDIR_/block/*
+.I __GNAWRL_HOMEDIR__/block/*
 .RS
-Every file in this directory represents an emailaddress, 
+Every file in this directory represents an emailaddress,
 .B gnarwl
-(already) received a mail for. Every time, gnarwl sends out an autorreply 
+(already) received a mail for. Every time, gnarwl sends out an autorreply
 for an address, the recipient of that mail is locked into the according file.
-.B gnarwl 
-will not send any further autoreplies for this sender/receiver combo, until 
+.B gnarwl
+will not send any further autoreplies for this sender/receiver combo, until
 the timeout specified in gnarwl.cfg expires.
 .RE
 .P
-.I _HOMEDIR_/blacklist.db
+.I __GNAWRL_HOMEDIR__/blacklist.db
 .RS
-Emailaddresses listed as keys in this file are not subject to autoresponding 
+Emailaddresses listed as keys in this file are not subject to autoresponding
 (the addresses of root, postmaster, webmaster and the like should
-be put herin). Note: The complete mailaddress, as it would appear in an email, 
-must be specified here, as 
+be put herin). Note: The complete mailaddress, as it would appear in an email,
+must be specified here, as
 .B gnarwl
 checks these "as-is".
 .RE
 .P
-.I _HOMEDIR_/badheaders.db
+.I __GNAWRL_HOMEDIR__/badheaders.db
 .RS
 Each entry in this file represent a line that may not occur in the header
-of a received email. That is, 
+of a received email. That is,
 .B gnarwl
 won't reply to any mail, it is able
 to match a headerline with an entry in this file.

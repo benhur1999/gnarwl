@@ -9,6 +9,7 @@
 #include <errno.h>
 
 #include <conf.h>
+#include "gnarwl.h"
 
 #ifdef HAVE_ICONV
 #include <iconv.h>
@@ -31,10 +32,10 @@ void expandVars(char** txt, char* s,char *r) {
   int sl;
   char *tmp;
   char *tmp2=NULL;
-  
+
   if (((*txt)==NULL) || (s==NULL)) return;
   if (r==NULL) r="";
-  
+
   // Quickfix: If s is/contains a substring of r, bail out before going into
   // an infinite loop
   for(x=0;x<(int)strlen(r);x++) {
@@ -42,9 +43,9 @@ void expandVars(char** txt, char* s,char *r) {
       return;
     }
   }
-  
+
   cpyStr(&tmp2,*txt);
-  
+
   sl=strlen(tmp2);
   for (x=0;x<sl;x++) {
     if (tmp2[x]==s[0]) {
@@ -82,27 +83,27 @@ char **splitString(const char* str, int idx, char delim) {
   int len;
   char* tmp;
   char** ret;
-  
+
   for(x=0;x<(int)strlen(str);x++) {
     while(str[x]==delim && x<(int)strlen(str)) x++;
     while(str[x]!=delim && x<(int)strlen(str)) x++;
     z++;
   }
-  
+
   z++;
   ret=(char**)calloc((size_t)z,sizeof(char*));
   if (ret==NULL) oom();
   z=0;
-  
+
   len=strlen(str);
   while(str[len-1]==delim) len--;
-  
+
   for(x=0;x<len;x++) {
     while(str[x]==delim && x<len) x++;
     y=x;
     if(z==idx && idx>-1) x=len;
     while(str[x]!=delim && x<len) x++;
-    
+
     tmp=(char*)calloc((size_t)x-y+3,sizeof(char));
     if (tmp==NULL) oom();
     memcpy(tmp,str+y*sizeof(char),(size_t)x-y);
@@ -113,24 +114,24 @@ char **splitString(const char* str, int idx, char delim) {
 }
 
 char* readFile(char* fname) {
-  
+
   int fd;
   struct stat fs;
   char *buf;
-  
+
   fd=open(fname,O_RDONLY);
   if ( (fd==-1) && (verbose==LVL_WARN) ) {
     syslog(LOG_MAIL+LOG_INFO,"WARN/IO %s",fname);
     return NULL;
   }
-  
+
   if (fstat(fd,&fs)==-1) {
     syslog(LOG_MAIL+LOG_INFO,"WARN/IO %s",fname);
     return NULL;
   }
-  
+
   buf=(char*)calloc((size_t)fs.st_size+1,sizeof(char));
-  
+
   if (buf==NULL) oom();
   if (fs.st_size!=read(fd,buf,(size_t)fs.st_size)) {
     syslog(LOG_MAIL+LOG_INFO,"WARN/IO %s",fname);
@@ -143,17 +144,17 @@ void cleanAddress(char** d) {
   int m=0;
   int r=-1;
   int l=-1;
-  
+
   char* s=NULL;
   char** tmp;
-  
+
   s=(char*)calloc(strlen(*d)+1,sizeof(char));
   if (s==NULL) oom();
   strcpy(s,*d);
-  
+
   for(m=0;m<(int)strlen(s);m++)  if (s[m]=='<') { l=m+1; break; }
   for(m=strlen(s);m>=0;m--) if (s[m]=='>') { r=m-1; break; }
-    
+
   for(m=0;m<(int)strlen(s);m++) {
     if (r>-1 && l>-1) {
       if (m<l || m>r) s[m]='*';
@@ -162,7 +163,7 @@ void cleanAddress(char** d) {
       if (! ( ((s[m]>47)&&(s[m]<58)) || ((s[m]>63)&&(s[m]<91)) || ((s[m]>96)&&(s[m]<123)) || s[m]=='.' || s[m]=='-' || s[m]=='_' || s[m]=='+' || s[m]=='=') ) s[m]='*';
     }
   }
-  
+
   tmp=splitString(s,1,'*');
   m=1;
   while (tmp[m]!=NULL) {free(tmp[m]); m++;}
@@ -189,20 +190,20 @@ void translateString(char** txt) {
   iconv_t conv;
   char* to;
 #endif
-    
+
   if (cfg.charset==NULL) return;
 
 #ifdef HAVE_ICONV
   conv=iconv_open(cfg.charset, LDAP_CHARSET);
   if (conv != (iconv_t) -1) {
-    
-    
+
+
     inlen=strlen(in);
     outlen=inlen;
     to=(char*)calloc(inlen+1,sizeof(char));
     if (to==NULL) oom();
     out=to;
-    
+
     while(inlen > 0 && outlen > 0) {
       if(iconv(conv, &in, &inlen, &out, &outlen) != 0) { in++; inlen--; }
     }

@@ -1,30 +1,30 @@
-.TH GNARWL _MANSEC_
-.SH NAME 
+.TH GNARWL 8
+.SH NAME
 gnarwl \- GNU Neat Autoreply With LDAP
 
 .SH SYNOPSIS
-.B gnarwl 
+.B gnarwl
 [\-h]
 [\-c\ <cfgfile>]
 [\-a\ <address>]
 [\-s\ <address>]
 
 .SH DESCRIPTION
-.B gnarwl 
+.B gnarwl
 is an email autoresponder, intended to be a successor to the old
-vaction(1) program. Since a modern mailserver, usually serves hundreds 
+vaction(1) program. Since a modern mailserver, usually serves hundreds
 (or even thousands) of mailaccounts, it is not sensible to give
 (untrusted) users shell access so they may create/maintain the .forward file,
-required by 
+required by
 .B vacation(1).
 .P
-With 
+With
 .B gnarwl
-, all user-suplied data is stored within an LDAP database, so 
+, all user-suplied data is stored within an LDAP database, so
 there are no per user ".forward" files (or even homedirs) needed.
-Configuration is conveniently done via one systemwide configfile. 
+Configuration is conveniently done via one systemwide configfile.
 .P
-Like the old 
+Like the old
 .B vacation(1)
 program, gnarwl accepts incoming mail through
 stdin, and will send outgoing mail via an external MTA (it even maintains
@@ -33,10 +33,10 @@ replacement).
 .P
 Several gdbm databases are maintained, in order to make sure, a) mail does not
 bounce back and force between gnarwl and another automated MUA, b) mailing
-lists will not be bothered and c) specific local addresses may never produce 
+lists will not be bothered and c) specific local addresses may never produce
 automatic replies.
-All these database files may be managed using the 
-.B damnit(_MANSEC_)
+All these database files may be managed using the
+.B damnit(8)
 program.
 
 .P
@@ -50,7 +50,7 @@ Force <address> as receiving address.
 .IP "-s <address>"
 Force <address> as sending address.
 
-.IP -h 
+.IP -h
 Print usage information.
 
 .SH CONFIGURATION
@@ -60,19 +60,19 @@ possible using the -c commandline switch. The following keywords are
 recognized in the configfile:
 
 .IP "map_sender <macroname>"
-Binds a macroname (case insensitive), referring to the sender of an incoming 
+Binds a macroname (case insensitive), referring to the sender of an incoming
 email. Defaults to "$sender".
 
 .IP "map_receiver <macroname>"
-Binds a macroname (case insensitive), referring to the receiver(s) of an 
+Binds a macroname (case insensitive), referring to the receiver(s) of an
 incoming email. Defaults to "$receiver".
 
 .IP "map_subject <macroname>"
-Binds a macroname (case insensitive), referring to the subject of an incoming 
+Binds a macroname (case insensitive), referring to the subject of an incoming
 email. Defaults to "$subject".
 
 .IP "map_field <ldapattribute> <macroname>"
-Binds a macroname (case insensitive), referring to a field in the resultset, 
+Binds a macroname (case insensitive), referring to a field in the resultset,
 returned by the database. There are no defaults for this directive.
 
 .IP "server_uri <ldap_uri [ldap_uri ...]>"
@@ -94,12 +94,12 @@ Port, the LDAP server listens on. Defaults to 389.
 The scope used for searching the database. Default is "sub".
 
 .IP "login <string>"
-Destinguished name to bind with to the LDAP database. Default is to bind 
+Destinguished name to bind with to the LDAP database. Default is to bind
 anonymously.
 
 .IP "password <string>"
 Password to use for binding to the LDAP database. If a password is required
-to access the server, then the configfile should belong to the gnarwl user 
+to access the server, then the configfile should belong to the gnarwl user
 and have file permission 0400.
 
 .IP "base <destinguished name>"
@@ -115,14 +115,14 @@ Search pattern to match against the database. Defaults to:
 
 .IP "result <ldap attribute>"
 The name of the attribute, that is to be taken as the emailbody. The content
-of this field will be pasted in between the data found via forceheader and 
+of this field will be pasted in between the data found via forceheader and
 forcefooter directives. Afterwards all remaining macros are expanded in the
 order of declaration, and the result will be piped through to the MTA.
 
 .IP "blockfiles <directory>"
 The directory, where gnarwl stores it's blockfiles. These files are
 required to keep track on who was sent an automatic reply. Default is:
-"_HOMEDIR_/block/".
+"__GNAWRL_BLOCKDIR__".
 
 .IP "umask <mode>
 What permission to give newly generated database files. The default is
@@ -135,8 +135,8 @@ blockfiles are read/written in this case.
 
 .IP "maxreceivers <number>"
 Ignore incoming email, specifying too many receiving addresses. It does
-not matter, whether these are local or not, as 
-.B gnarwl 
+not matter, whether these are local or not, as
+.B gnarwl
 doesn't know domains. Default is 256.
 
 .IP "maxheader <number>"
@@ -153,15 +153,15 @@ this mail will be ignored by
 is deactivated by default.
 
 .IP "blacklist <filename>"
-Pointer to a database file, containing emailaddresses, 
+Pointer to a database file, containing emailaddresses,
 .B gnarwl
 is not allowed
-to generate automatic replies for (useful to prevent automatic replies from 
-addresses, which are shared by several people). This feature is deactivated 
+to generate automatic replies for (useful to prevent automatic replies from
+addresses, which are shared by several people). This feature is deactivated
 by default.
 
 .IP "forceheader <filename>"
-Path to a text file, containing a standardized header, that is to be 
+Path to a text file, containing a standardized header, that is to be
 pasted in front of every outgoing mail. This file should end with a single
 empty line. Otherwise it is assumed, that the users are allowed to
 continue the header and will provide the separating empty line themselves.
@@ -191,17 +191,17 @@ contain receiving addresses. Defaults to: "To Cc".
 
 .IP "loglevel <0|1|2|3>"
 Specifies what to send to the syslog. A higher loglevel
-automatically includes all lower loglevels (see section syslog for more 
+automatically includes all lower loglevels (see section syslog for more
 information).
 
 .IP "deref <never|search|find|always>"
 Controls what LDAP alias dereferencing will be performed. Default is "find".
 
 .SH SYSLOG
-Since 
+Since
 .B gnarwl
 is not meant to be invoked by anything but the mailsystem,
-it'll never print out messages to the systemconsole, but logs them via 
+it'll never print out messages to the systemconsole, but logs them via
 syslog(3), using the facility "mail". A log line is always of the following
 format:
 .P
@@ -211,25 +211,25 @@ The <level> field indicates the severity of the message, it corresponds to the
 "loglevel" config directive. Possible values are:
 .P
 .IP "CRIT (loglevel 0)"
-Critical messages. 
-.B gnarwl cannot continue and will die with a non-zero exit 
+Critical messages.
+.B gnarwl cannot continue and will die with a non-zero exit
 code. This usually causes the mailsystem to bounce mail.
 
 .IP "WARN (loglevel 1)"
-A warning. 
-.B gnarwl 
+A warning.
+.B gnarwl
 can will continue, but not with the full/intended functionality.
 
 .IP "INFO (loglevel 2)"
 Status information. A message in the INFO loglevel indicates normal
 behaviour.
 
-.IP "DEBUG (loglevel 3)" 
-Debugging information. 
-.B gnarwl will log a lot of information on how mail is processed. 
+.IP "DEBUG (loglevel 3)"
+Debugging information.
+.B gnarwl will log a lot of information on how mail is processed.
 
 .P
-The <origin> field gives a short hint about what caused the log entry in 
+The <origin> field gives a short hint about what caused the log entry in
 question, while <message> contains a short description of what actually
 happened.
 
@@ -241,46 +241,46 @@ Patrick Ahlbrecht <p.ahlbrecht@billiton.de>
 .BR vacation (1),
 .BR postfix (1),
 .BR iconv (1),
-.BR damnit (_MANSEC_),
+.BR damnit (8),
 .BR rfc822
 
 .SH FILES
-.I _CONFDIR_/gnarwl.cfg 
-.RS 
+.I __GNAWRL_CFGFILE__
+.RS
 main configuration file.
 .RE
 .P
-.I _HOMEDIR_/.forward
-.RS 
+.I __GNAWRL_HOMEDIR__/.forward
+.RS
 forward file for the mailsystem.
 .RE
 .P
-.I _HOMEDIR_/blacklist.db
+.I __GNAWRL_HOMEDIR__/blacklist.db
 .RS
-.B gnarwl 
+.B gnarwl
 won't send an autoreply for anyone whose emailaddress is listed
 herin.
 .RE
 .P
-.I _HOMEDIR_/badheaders.db
+.I __GNAWRL_HOMEDIR__/badheaders.db
 .RS
-.B gnarwl 
+.B gnarwl
 will ignore mail, it is able to match a headerline with an entry in
 this file. Case is significant, no wildcards are expanded.
 .RE
 .P
-.I _HOMEDIR_/header.txt
+.I __GNAWRL_HOMEDIR__/header.txt
 .RS
 Standard header to paste in front of every outgoing mail.
 .RE
 .P
-.I _HOMEDIR_/footer.txt
+.I __GNAWRL_HOMEDIR__/footer.txt
 .RS
 Standard footer to append to every outgoing mail.
 .RE
 .P
-.I _HOMEDIR_/block/*
-.RS 
+.I __GNAWRL_HOMEDIR__/block/*
+.RS
 block files.
 .RE
 .P

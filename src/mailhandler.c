@@ -11,6 +11,7 @@
 #endif
 
 #include <conf.h>
+#include "gnarwl.h"
 #include "mailhandler.h"
 #include "config.h"
 #include "util.h"
@@ -59,7 +60,7 @@ void addAddr(const char* adr) {
   if (receivers==NULL) oom();
   receivers[i]=NULL;
   receivers[i+1]=NULL;
-  
+
   cpyStr(&(receivers[i]),adr);
 }
 
@@ -69,10 +70,10 @@ void parseHeader(const char* hl) {
 
   tmp=splitString(hl,1,':');
   if (tmp[0]==NULL || tmp[1]==NULL) return;
-  
+
   // Cosmetics: Strip leading space of header data
   if (tmp[1][0]==' ') memmove(tmp[1],tmp[1]+sizeof(char),strlen(tmp[1]));
-  
+
   if(!strcasecmp("sender",tmp[0]) && (mail_status&MAIL_PREDEF_SENDER)!=MAIL_PREDEF_SENDER) {
     cleanAddress(&tmp[1]);
     if (tmp[1]==NULL) {
@@ -81,7 +82,7 @@ void parseHeader(const char* hl) {
     else { cpyStr(&sender,tmp[1]); }
     mail_status=mail_status|MAIL_HAS_SENDER;
   }
-  
+
   if(!strcasecmp("reply-to",tmp[0]) && (mail_status&MAIL_PREDEF_SENDER)!=MAIL_PREDEF_SENDER && (mail_status&MAIL_HAS_SENDER)!=MAIL_HAS_SENDER) {
     cleanAddress(&tmp[1]);
     if (tmp[1]==NULL) {
@@ -90,7 +91,7 @@ void parseHeader(const char* hl) {
     else { cpyStr(&sender,tmp[1]); }
     mail_status=mail_status|MAIL_HAS_REPLYTO;
   }
-  
+
   if(!strcasecmp("from",tmp[0]) && (mail_status&MAIL_PREDEF_SENDER)!=MAIL_PREDEF_SENDER && (mail_status&MAIL_HAS_SENDER)!=MAIL_HAS_SENDER && (mail_status&MAIL_HAS_REPLYTO)!=MAIL_HAS_REPLYTO) {
     cleanAddress(&tmp[1]);
     if (tmp[1]==NULL) {
@@ -98,22 +99,22 @@ void parseHeader(const char* hl) {
     }
     else { cpyStr(&sender,tmp[1]); }
   }
-  
+
   if(!strcasecmp("subject",tmp[0])) {
     cpyStr(&subject,tmp[1]);
   }
-  
+
   if(!strcasecmp("message-id",tmp[0])) {
     cpyStr(&messageid,tmp[1]);
   }
-  
+
   while( (mail_status&MAIL_PREDEF_RECEIVER)!=MAIL_PREDEF_RECEIVER && cfg.recv_header[i]!=NULL) {
     if((!strcasecmp(cfg.recv_header[i],tmp[0]) ) ) {
       char** buf=NULL;
       int c=0;
-    
+
       buf=splitString(tmp[1],-1,',');
-    
+
       while(buf[c]!=NULL) {
         cleanAddress(&buf[c]);
         addAddr(buf[c]);
@@ -123,7 +124,7 @@ void parseHeader(const char* hl) {
     }
     i++;
   }
-  
+
   free(tmp[0]);
   free(tmp[1]);
 }
@@ -132,13 +133,13 @@ void readFromSTDIN(void) {
   char ibuf[MAXLINE]; // "inputbuffer"
   char *bbuf=NULL;    // "backbuffer"
   int lc=0;
-  
+
   while (fgets(ibuf,(int)sizeof(ibuf)-1,stdin) && (*ibuf != '\n') && (lc <= cfg.maxheader)) {
     // delete trailing newline character (messes up folded lines and filter)
     ibuf[strlen(ibuf)-1]='\0';
-    
+
     if (dbContains(ibuf,dbf_f)) mail_status=mail_status|MAIL_BADHEADER;
-    
+
     if (bbuf==NULL) cpyStr(&bbuf,ibuf);
     else {
       if (ibuf[0]==' ' || ibuf[0]=='\t') {
@@ -148,7 +149,7 @@ void readFromSTDIN(void) {
       }
       else {
         parseHeader(bbuf);
-        free(bbuf); 
+        free(bbuf);
         bbuf=NULL;
         cpyStr(&bbuf,ibuf);
       }
@@ -157,34 +158,34 @@ void readFromSTDIN(void) {
   }
   if (bbuf!=NULL) { parseHeader(bbuf); free(bbuf);}
   if (lc>cfg.maxheader) mail_status=mail_status|MAIL_TOOBIG;
-  
+
   // Dummy instruction to empty stdin
   while (fgets(ibuf,(int)sizeof(ibuf)-1,stdin)) lc++;
   return;
 }
 
 int receiveMail(char** recv, const char* sndr) {
-  
+
   mail_status=MAIL_NOTSPECIAL;
   messageid=NULL;
   sender=NULL;
   subject=NULL;
-  
+
   cpyStr(&messageid,"No ID found");
-  
+
   receivers=(char**)calloc(1,sizeof(char**));
   if (receivers==NULL) oom();
-  
+
   if (cfg.mfilter!=NULL) {
     dbf_f=dbOpen(cfg.mfilter,GDBM_READER);
     if (dbf_f==NULL && (verbose>=LVL_WARN) ) {
       syslog(LOG_MAIL|LOG_WARNING,"WARN/IO %s",cfg.mfilter);
     }
   }
-  
+
   if (cfg.blist!=NULL) {
     dbf_b=dbOpen(cfg.blist,GDBM_READER);
-    if (dbf_b==NULL && (verbose>=LVL_WARN) ) { 
+    if (dbf_b==NULL && (verbose>=LVL_WARN) ) {
       syslog(LOG_MAIL|LOG_WARNING,"WARN/IO %s",cfg.blist);
     }
   }
@@ -194,7 +195,7 @@ int receiveMail(char** recv, const char* sndr) {
     mail_status=mail_status|MAIL_PREDEF_RECEIVER;
     while(recv[i]!=NULL) {addAddr(recv[i]);i++;}
   }
-  
+
   if (sndr!=NULL) {
     sender=NULL;
     mail_status=mail_status|MAIL_PREDEF_SENDER;
@@ -202,17 +203,17 @@ int receiveMail(char** recv, const char* sndr) {
   }
 
   readFromSTDIN();
-  
+
   if (sender==NULL || receivers[0]==NULL) mail_status=mail_status|MAIL_LACK;
 
   dbClose(dbf_f);
   dbClose(dbf_b);
-  
+
   if (verbose>=LVL_DEBUG) {
     syslog(LOG_MAIL|LOG_DEBUG,"DEBUG/MAIL Code: %d MessageID: %s",mail_status,messageid);
   }
-  
-  
+
+
   if (mail_status>=MAIL_BADHEADER) return FALSE;
   return TRUE;
 }
@@ -222,12 +223,12 @@ void sendMail(char* addr, char* body) {
   int c;
   char* tmp=NULL;
   FILE *desc;
-  
+
   if (pipe(p)!=0) {
     syslog(LOG_MAIL|LOG_ERR,"CRIT/MAIL pipe to MTA failed");
     exit(EXIT_FAILURE);
   }
-  
+
   c=fork();
   if (c<0) {
     syslog(LOG_MAIL|LOG_ERR,"CRIT/MAIL couldn't fork MTA");
@@ -244,7 +245,7 @@ void sendMail(char* addr, char* body) {
     strcpy(tmp,cfg.mta);
     tmp[strlen(cfg.mta)]=' ';
     strcat(tmp,cfg.mta_opts);
-    
+
     expandVars(&tmp,cfg.map_sender,sender);
     expandVars(&tmp,cfg.map_receiver,addr);
 
@@ -256,9 +257,9 @@ void sendMail(char* addr, char* body) {
   desc=fdopen(p[1],"w");
   fputs(body,desc);
   fclose(desc);
-  
+
   wait(NULL);
-  
+
   if (verbose>=LVL_INFO) {
     syslog(LOG_MAIL|LOG_INFO,"INFO/MAIL sent mail: %s -> %s",addr, sender);
   }
