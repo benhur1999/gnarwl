@@ -84,8 +84,9 @@ subdir = .
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure $(am__configure_deps) \
 	$(srcdir)/conf.h.in $(top_srcdir)/config.aux/depcomp \
-	config.aux/config.guess config.aux/config.sub \
-	config.aux/depcomp config.aux/install-sh config.aux/missing \
+	config.aux/compile config.aux/config.guess \
+	config.aux/config.sub config.aux/depcomp config.aux/install-sh \
+	config.aux/missing $(top_srcdir)/config.aux/compile \
 	$(top_srcdir)/config.aux/config.guess \
 	$(top_srcdir)/config.aux/config.sub \
 	$(top_srcdir)/config.aux/install-sh \
@@ -319,7 +320,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AUTOMAKE_OPTIONS = foreign subdir-objects
+AUTOMAKE_OPTIONS = foreign subdir-objects -Wall -Werror
 ACLOCAL_AMFLAGS = -I m4 --install
 sysconf_DATA = \
 	data/gnarwl.cfg
@@ -336,6 +337,7 @@ gnarwl_SOURCES = \
 	src/gnarwl.c
 
 gnarwl_CPPFLAGS = \
+	-DLDAP_DEPRECATED=1 \
 	-DGNAWRL_HOMEDIR="\"@GNAWRL_HOMEDIR@\"" \
 	-DGNAWRL_CFGFILE="\"@GNAWRL_CFGFILE@\"" \
 	-DGNAWRL_MTA="\"@GNAWRL_MTA@\""
@@ -348,6 +350,7 @@ damnit_SOURCES = \
 	src/damnit.c
 
 damnit_CPPFLAGS = \
+	-DLDAP_DEPRECATED=1 \
 	-DGNAWRL_HOMEDIR="\"@GNAWRL_HOMEDIR@\"" \
 	-DGNAWRL_CFGFILE="\"@GNAWRL_CFGFILE@\"" \
 	-DGNAWRL_MTA="\"@GNAWRL_MTA@\""
