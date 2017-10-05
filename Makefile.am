@@ -1,4 +1,4 @@
-AUTOMAKE_OPTIONS= foreign subdir-objects
+AUTOMAKE_OPTIONS= foreign subdir-objects -Wall -Werror
 ACLOCAL_AMFLAGS = -I m4 --install
 
 bin_PROGRAMS = gnarwl damnit
@@ -17,6 +17,7 @@ gnarwl_SOURCES = \
 	src/util.h src/util.c \
 	src/gnarwl.c
 gnarwl_CPPFLAGS = \
+	-DLDAP_DEPRECATED=1 \
 	-DGNAWRL_HOMEDIR="\"@GNAWRL_HOMEDIR@\"" \
 	-DGNAWRL_CFGFILE="\"@GNAWRL_CFGFILE@\"" \
 	-DGNAWRL_MTA="\"@GNAWRL_MTA@\""
@@ -28,6 +29,7 @@ damnit_SOURCES = \
 	src/util.h src/util.c \
 	src/damnit.c
 damnit_CPPFLAGS = \
+	-DLDAP_DEPRECATED=1 \
 	-DGNAWRL_HOMEDIR="\"@GNAWRL_HOMEDIR@\"" \
 	-DGNAWRL_CFGFILE="\"@GNAWRL_CFGFILE@\"" \
 	-DGNAWRL_MTA="\"@GNAWRL_MTA@\""
